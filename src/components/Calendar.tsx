@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface CalendarProps {
@@ -9,47 +10,176 @@ interface CalendarProps {
 
 export default function Calendar({ selectedDate, onDateChange }: CalendarProps) {
   const router = useRouter()
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDateState, setSelectedDateState] = useState<Date | null>(null)
 
-  const getDateString = (date: Date) => {
-    return date.toISOString().split('T')[0] // YYYY-MM-DD 형식
+  const today = new Date()
+
+  // 월 변경 함수
+  const changeMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev)
+      if (direction === 'prev') {
+        newDate.setMonth(newDate.getMonth() - 1)
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1)
+      }
+      return newDate
+    })
   }
 
-  const navigateToDate = (date: Date) => {
+  // 해당 월의 날짜들 계산
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+
+    // 이전 달의 마지막 날짜들
+    const prevMonthLastDay = new Date(year, month, 0).getDate()
+    const startDayOfWeek = firstDay.getDay() // 0: 일요일, 1: 월요일, ...
+
+    const days = []
+
+    // 이전 달 날짜들 추가
+    for (let i = startDayOfWeek - 1; i >= 0; i--) {
+      const day = prevMonthLastDay - i
+      days.push({
+        day,
+        date: new Date(year, month - 1, day),
+        isCurrentMonth: false,
+        isToday: false,
+        isSelected: false
+      })
+    }
+
+    // 현재 달 날짜들 추가
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day)
+      const isToday = date.toDateString() === today.toDateString()
+      const isSelected = selectedDateState ? date.toDateString() === selectedDateState.toDateString() : false
+
+      days.push({
+        day,
+        date,
+        isCurrentMonth: true,
+        isToday,
+        isSelected
+      })
+    }
+
+    // 다음 달 날짜들 추가 (42개 셀 채우기)
+    const remainingCells = 42 - days.length
+    for (let day = 1; day <= remainingCells; day++) {
+      days.push({
+        day,
+        date: new Date(year, month + 1, day),
+        isCurrentMonth: false,
+        isToday: false,
+        isSelected: false
+      })
+    }
+
+    return days
+  }
+
+  const handleDateClick = (date: Date) => {
+    setSelectedDateState(date)
     if (onDateChange) {
       onDateChange(date)
     } else {
-      const dateString = getDateString(date)
+      // 메인 페이지에서는 날짜 클릭시 해당 날짜 페이지로 이동
+      const dateString = date.toISOString().split('T')[0] // YYYY-MM-DD 형식
       router.push(`/${dateString}`)
     }
   }
 
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  const days = getDaysInMonth(currentDate)
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토']
 
   return (
-    <div className="calendar-simple">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">빠른 날짜 선택</h3>
-      <div className="grid grid-cols-1 gap-3">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 max-w-sm mx-auto shadow-sm">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-4">
         <button
-          onClick={() => navigateToDate(yesterday)}
-          className="px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors duration-200 border border-blue-200"
+          onClick={() => changeMonth('prev')}
+          className="p-1 hover:bg-gray-100 rounded-md transition-colors duration-200"
+          aria-label="이전 달"
         >
-          어제 ({getDateString(yesterday)})
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
+
+        <h2 className="text-lg font-semibold text-gray-900">
+          {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+        </h2>
+
         <button
-          onClick={() => navigateToDate(today)}
-          className="px-4 py-3 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg font-medium transition-colors duration-200 border border-green-200"
+          onClick={() => changeMonth('next')}
+          className="p-1 hover:bg-gray-100 rounded-md transition-colors duration-200"
+          aria-label="다음 달"
         >
-          오늘 ({getDateString(today)})
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
         </button>
+      </div>
+
+      {/* 요일 헤더 */}
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {weekdays.map((day, index) => (
+          <div
+            key={day}
+            className={`text-center text-sm font-medium py-2 ${
+              index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-gray-700'
+            }`}
+          >
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* 날짜 그리드 */}
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((dayInfo, index) => (
+          <button
+            key={index}
+            onClick={() => handleDateClick(dayInfo.date)}
+            className={`
+              h-10 w-10 text-sm font-medium rounded-md transition-all duration-200 relative
+              ${dayInfo.isCurrentMonth
+                ? 'text-gray-900 hover:bg-blue-50 hover:text-blue-600 hover:shadow-sm'
+                : 'text-gray-400 hover:bg-gray-50'
+              }
+              ${dayInfo.isToday
+                ? 'bg-blue-100 text-blue-700 font-bold ring-2 ring-blue-300 shadow-sm'
+                : ''
+              }
+              ${dayInfo.isSelected
+                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md transform scale-105'
+                : ''
+              }
+            `}
+            disabled={!dayInfo.isCurrentMonth}
+            aria-label={`${dayInfo.date.getFullYear()}년 ${dayInfo.date.getMonth() + 1}월 ${dayInfo.day}일`}
+          >
+            {dayInfo.day}
+            {dayInfo.isToday && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* 오늘로 돌아가기 버튼 */}
+      <div className="mt-4 pt-3 border-t border-gray-100">
         <button
-          onClick={() => navigateToDate(tomorrow)}
-          className="px-4 py-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-medium transition-colors duration-200 border border-purple-200"
+          onClick={() => setCurrentDate(new Date())}
+          className="w-full px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors duration-200 font-medium"
         >
-          내일 ({getDateString(tomorrow)})
+          오늘로 돌아가기
         </button>
       </div>
     </div>
