@@ -1,10 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import ReactCalendar from 'react-calendar'
+import ReactCalendar, { Value } from 'react-calendar'
 import { useRouter } from 'next/navigation'
-
-type CalendarValue = Date | null
 
 interface CalendarProps {
   selectedDate?: Date
@@ -15,7 +13,7 @@ export default function Calendar({ selectedDate, onDateChange }: CalendarProps) 
   const router = useRouter()
   const [date, setDate] = useState<Date>(selectedDate || new Date())
 
-  const handleDateChange = (value: CalendarValue, event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleDateChange = (value: Value, event: React.MouseEvent<HTMLButtonElement>) => {
     if (value instanceof Date) {
       setDate(value)
       if (onDateChange) {
