@@ -1,16 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Todo } from '@/types'
-import TodoForm from './TodoForm'
-import TodoList from './TodoList'
-import Calendar from './Calendar'
+import TodoForm from '@/components/TodoForm'
+import TodoList from '@/components/TodoList'
 
-export default function TodoApp() {
+export default function DatePage() {
+  const params = useParams()
+  const router = useRouter()
   const [todos, setTodos] = useState<Todo[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+
+  const dateString = params.date as string
+  const selectedDate = new Date(dateString + 'T00:00:00')
 
   useEffect(() => {
     // Get initial user
@@ -37,7 +42,7 @@ export default function TodoApp() {
       setTodos([])
       setLoading(false)
     }
-  }, [user])
+  }, [user, dateString])
 
   const fetchTodos = async () => {
     try {
@@ -55,13 +60,20 @@ export default function TodoApp() {
     }
   }
 
+  // 선택된 날짜의 Todo들만 필터링
+  const filteredTodos = todos.filter(todo => {
+    const todoDate = new Date(todo.created_at).toDateString()
+    const selectedDateString = selectedDate.toDateString()
+    return todoDate === selectedDateString
+  })
+
   const addTodo = async (title: string) => {
     if (!user) return
 
     try {
       const { data, error } = await supabase
         .from('todos')
-        .insert([{ title, user_id: user.id }])
+        .insert([{ title, user_id: user.id, created_at: selectedDate.toISOString() }])
         .select()
         .single()
 
@@ -109,24 +121,34 @@ export default function TodoApp() {
 
   const getTodayCompletedCount = () => {
     const today = new Date().toDateString()
-    return todos.filter(todo => {
+    return filteredTodos.filter(todo => {
       if (!todo.completed) return false
       const completedDate = new Date(todo.updated_at).toDateString()
       return completedDate === today
     }).length
   }
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
+  const formatDate = (date: Date) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    }
+    return date.toLocaleDateString('ko-KR', options)
   }
 
   if (!user) {
-    return <div>Loading...</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-500">로딩중...</div>
+      </div>
+    )
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-gray-500">로딩중...</div>
       </div>
     )
@@ -134,45 +156,45 @@ export default function TodoApp() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        {/* 헤더 */}
+      <div className="max-w-2xl mx-auto">
+        {/* 네비게이션 */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Todo App</h1>
           <button
-            onClick={handleLogout}
-            className="text-gray-500 hover:text-gray-700 text-sm px-3 py-1 rounded-md hover:bg-gray-100"
+            onClick={() => router.push('/')}
+            className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
           >
-            로그아웃
+            ← 메인으로 돌아가기
           </button>
+          <div className="text-sm text-gray-500">
+            {formatDate(selectedDate)}
+          </div>
         </div>
 
-        {/* 메인 콘텐츠: 캘린더와 오늘 할일 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* 캘린더 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">캘린더</h2>
-            <div className="flex justify-center">
-              <Calendar />
-            </div>
+        {/* 날짜별 Todo */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            {formatDate(selectedDate)}
+          </h1>
+
+          {/* Todo 추가 폼 */}
+          <div className="mb-6">
+            <TodoForm onAdd={addTodo} />
           </div>
 
-          {/* 오늘 할일 */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">오늘 할 일</h2>
+          {/* 해당 날짜의 Todo 리스트 */}
+          <TodoList
+            todos={filteredTodos}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
+            todayCompletedCount={getTodayCompletedCount()}
+          />
 
-            {/* Todo 추가 폼 */}
-            <div className="mb-4">
-              <TodoForm onAdd={addTodo} />
+          {filteredTodos.length === 0 && (
+            <div className="text-center py-8">
+              <div className="text-gray-400 text-lg">이 날짜에 할 일이 없습니다.</div>
+              <div className="text-gray-300 text-sm mt-2">새로운 할 일을 추가해보세요!</div>
             </div>
-
-            {/* 오늘 할일 리스트 */}
-            <TodoList
-              todos={todos}
-              onToggle={toggleTodo}
-              onDelete={deleteTodo}
-              todayCompletedCount={getTodayCompletedCount()}
-            />
-          </div>
+          )}
         </div>
       </div>
     </div>
