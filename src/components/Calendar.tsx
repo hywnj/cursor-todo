@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import ReactCalendar from 'react-calendar'
 import { useRouter } from 'next/navigation'
-import 'react-calendar/dist/Calendar.css'
 
 type CalendarValue = Date | null
 
