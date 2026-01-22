@@ -15,7 +15,9 @@ export default function DatePage() {
   const [user, setUser] = useState<any>(null)
 
   const dateString = params.date as string
-  const selectedDate = new Date(dateString + 'T00:00:00')
+  // URL 파라미터에서 날짜를 안전하게 파싱 (시간대 문제 방지)
+  const [year, month, day] = dateString.split('-').map(Number)
+  const selectedDate = new Date(year, month - 1, day)
 
   useEffect(() => {
     // Get initial user
@@ -60,20 +62,30 @@ export default function DatePage() {
     }
   }
 
-  // 선택된 날짜의 Todo들만 필터링
+  // 선택된 날짜의 Todo들만 필터링 (시간대 문제 방지를 위해 연/월/일만 비교)
   const filteredTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at).toDateString()
-    const selectedDateString = selectedDate.toDateString()
-    return todoDate === selectedDateString
+    const todoDate = new Date(todo.created_at)
+    const todoYear = todoDate.getFullYear()
+    const todoMonth = todoDate.getMonth()
+    const todoDay = todoDate.getDate()
+
+    const selectedYear = selectedDate.getFullYear()
+    const selectedMonth = selectedDate.getMonth()
+    const selectedDay = selectedDate.getDate()
+
+    return todoYear === selectedYear && todoMonth === selectedMonth && todoDay === selectedDay
   })
 
   const addTodo = async (title: string) => {
     if (!user) return
 
     try {
+      // 선택된 날짜의 시작 시간(00:00:00)으로 created_at 설정
+      const createdAt = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0)
+
       const { data, error } = await supabase
         .from('todos')
-        .insert([{ title, user_id: user.id, created_at: selectedDate.toISOString() }])
+        .insert([{ title, user_id: user.id, created_at: createdAt.toISOString() }])
         .select()
         .single()
 

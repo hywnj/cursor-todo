@@ -90,7 +90,8 @@ export default function Calendar({ selectedDate, onDateChange }: CalendarProps) 
       onDateChange(date)
     } else {
       // 메인 페이지에서는 날짜 클릭시 해당 날짜 페이지로 이동
-      const dateString = date.toISOString().split('T')[0] // YYYY-MM-DD 형식
+      // toLocaleDateString('en-CA')로 로컬 시간 기준 YYYY-MM-DD 형식 사용
+      const dateString = date.toLocaleDateString('en-CA') // YYYY-MM-DD 형식
       router.push(`/${dateString}`)
     }
   }
