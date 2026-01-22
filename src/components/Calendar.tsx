@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import ReactCalendar from 'react-calendar'
+import ReactCalendar, { Value } from 'react-calendar'
 import { useRouter } from 'next/navigation'
 import 'react-calendar/dist/Calendar.css'
 
@@ -14,14 +14,16 @@ export default function Calendar({ selectedDate, onDateChange }: CalendarProps) 
   const router = useRouter()
   const [date, setDate] = useState<Date>(selectedDate || new Date())
 
-  const handleDateChange = (newDate: Date) => {
-    setDate(newDate)
-    if (onDateChange) {
-      onDateChange(newDate)
-    } else {
-      // 메인 페이지에서는 날짜 클릭시 해당 날짜 페이지로 이동
-      const dateString = newDate.toISOString().split('T')[0] // YYYY-MM-DD 형식
-      router.push(`/${dateString}`)
+  const handleDateChange = (value: Value, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (value instanceof Date) {
+      setDate(value)
+      if (onDateChange) {
+        onDateChange(value)
+      } else {
+        // 메인 페이지에서는 날짜 클릭시 해당 날짜 페이지로 이동
+        const dateString = value.toISOString().split('T')[0] // YYYY-MM-DD 형식
+        router.push(`/${dateString}`)
+      }
     }
   }
 
