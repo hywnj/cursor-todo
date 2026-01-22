@@ -35,7 +35,7 @@ export default function TodoApp() {
   // 모바일 감지 및 화면 크기 변경 감지
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 640) // 640px 이하를 모바일로 간주
+      setIsMobile(window.innerWidth <= 230) // 230px 이하를 모바일로 간주
     }
 
     checkMobile()
