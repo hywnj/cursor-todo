@@ -100,7 +100,7 @@ export default function Calendar({ selectedDate, onDateChange }: CalendarProps) 
   const weekdays = ['일', '월', '화', '수', '목', '금', '토']
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 max-w-sm mx-auto shadow-sm">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 w-full max-w-md mx-auto shadow-sm">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-4">
         <button
