@@ -26,7 +26,7 @@ export default function TodoList({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span className="text-green-800 font-medium">오늘 완료한 할 일</span>
+            <span className="text-green-800 font-medium">완료한 할일</span>
           </div>
           <span className="text-2xl font-bold text-green-800">
             {todayCompletedCount}

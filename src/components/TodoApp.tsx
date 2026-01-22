@@ -169,6 +169,15 @@ export default function TodoApp() {
     }).length
   }
 
+  const getCurrentViewCompletedCount = () => {
+    const viewDate = currentViewDate.toDateString()
+    return todos.filter(todo => {
+      if (!todo.completed) return false
+      const completedDate = new Date(todo.updated_at).toDateString()
+      return completedDate === viewDate
+    }).length
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
   }
@@ -185,15 +194,13 @@ export default function TodoApp() {
     )
   }
 
-  // 모바일용 날짜 포맷 함수
+  // 모바일용 날짜 포맷 함수 (간결하게 표시)
   const formatMobileDate = (date: Date) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'long'
-    }
-    return date.toLocaleDateString('ko-KR', options)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const weekday = date.toLocaleDateString('ko-KR', { weekday: 'short' })
+    return `${year}.${month}.${day}(${weekday})`
   }
 
   return (
@@ -261,7 +268,7 @@ export default function TodoApp() {
                 todos={getCurrentViewTodos()}
                 onToggle={toggleTodo}
                 onDelete={deleteTodo}
-                todayCompletedCount={getTodayCompletedCount()}
+                todayCompletedCount={getCurrentViewCompletedCount()}
               />
 
               {getCurrentViewTodos().length === 0 && (
