@@ -1,10 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import ReactCalendar from 'react-calendar'
 import { useRouter } from 'next/navigation'
-
-type CalendarValue = Date | Date[] | null
 
 interface CalendarProps {
   selectedDate?: Date
@@ -13,106 +9,49 @@ interface CalendarProps {
 
 export default function Calendar({ selectedDate, onDateChange }: CalendarProps) {
   const router = useRouter()
-  const [date, setDate] = useState<Date>(selectedDate || new Date())
 
-  const handleDateChange = (value: CalendarValue, event: React.MouseEvent<HTMLButtonElement>) => {
-    if (value instanceof Date) {
-      setDate(value)
-      if (onDateChange) {
-        onDateChange(value)
-      } else {
-        // 메인 페이지에서는 날짜 클릭시 해당 날짜 페이지로 이동
-        const dateString = value.toISOString().split('T')[0] // YYYY-MM-DD 형식
-        router.push(`/${dateString}`)
-      }
+  const getDateString = (date: Date) => {
+    return date.toISOString().split('T')[0] // YYYY-MM-DD 형식
+  }
+
+  const navigateToDate = (date: Date) => {
+    if (onDateChange) {
+      onDateChange(date)
+    } else {
+      const dateString = getDateString(date)
+      router.push(`/${dateString}`)
     }
   }
 
-  // 오늘 날짜 표시를 위한 커스텀 클래스
-  const tileClassName = ({ date: tileDate, view }: { date: Date; view: string }) => {
-    if (view === 'month') {
-      const today = new Date()
-      const isToday = tileDate.toDateString() === today.toDateString()
-      return isToday ? 'today-highlight' : null
-    }
-    return null
-  }
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
 
   return (
-    <div className="calendar-container">
-      <style jsx>{`
-        .calendar-container :global(.react-calendar) {
-          width: 100%;
-          max-width: 350px;
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 0.5rem;
-          font-family: inherit;
-          line-height: 1.125em;
-        }
-
-        .calendar-container :global(.react-calendar__tile) {
-          padding: 0.75em 0.5em;
-          background: none;
-          text-align: center;
-          border-radius: 0.25rem;
-          transition: background-color 0.2s ease;
-        }
-
-        .calendar-container :global(.react-calendar__tile:hover) {
-          background-color: #f3f4f6;
-        }
-
-        .calendar-container :global(.react-calendar__tile--active) {
-          background-color: #3b82f6 !important;
-          color: white;
-        }
-
-        .calendar-container :global(.react-calendar__tile--now) {
-          background-color: #dbeafe;
-          color: #1e40af;
-        }
-
-        .calendar-container :global(.today-highlight) {
-          background-color: #fef3c7 !important;
-          color: #92400e;
-        }
-
-        .calendar-container :global(.react-calendar__month-view__days__day--weekend) {
-          color: #dc2626;
-        }
-
-        .calendar-container :global(.react-calendar__navigation) {
-          margin-bottom: 1em;
-        }
-
-        .calendar-container :global(.react-calendar__navigation button) {
-          color: #374151;
-          border: none;
-          background: none;
-          font-size: 1.1em;
-          font-weight: 600;
-        }
-
-        .calendar-container :global(.react-calendar__navigation button:hover) {
-          background-color: #f3f4f6;
-        }
-
-        .calendar-container :global(.react-calendar__month-view__weekdays) {
-          text-transform: uppercase;
-          font-weight: 600;
-          font-size: 0.75em;
-          color: #6b7280;
-        }
-      `}</style>
-
-      <ReactCalendar
-        onChange={handleDateChange}
-        value={date}
-        locale="ko-KR"
-        tileClassName={tileClassName}
-        showNeighboringMonth={false}
-      />
+    <div className="calendar-simple">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">빠른 날짜 선택</h3>
+      <div className="grid grid-cols-1 gap-3">
+        <button
+          onClick={() => navigateToDate(yesterday)}
+          className="px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors duration-200 border border-blue-200"
+        >
+          어제 ({getDateString(yesterday)})
+        </button>
+        <button
+          onClick={() => navigateToDate(today)}
+          className="px-4 py-3 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg font-medium transition-colors duration-200 border border-green-200"
+        >
+          오늘 ({getDateString(today)})
+        </button>
+        <button
+          onClick={() => navigateToDate(tomorrow)}
+          className="px-4 py-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-medium transition-colors duration-200 border border-purple-200"
+        >
+          내일 ({getDateString(tomorrow)})
+        </button>
+      </div>
     </div>
   )
 }
