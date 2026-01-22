@@ -158,7 +158,6 @@ export default function TodoApp() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* 캘린더 */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">캘린더</h2>
             <div className="flex justify-center">
               <Calendar />
             </div>
