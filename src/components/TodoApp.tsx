@@ -107,6 +107,14 @@ export default function TodoApp() {
     }
   }
 
+  const getTodayTodos = () => {
+    const today = new Date().toDateString()
+    return todos.filter(todo => {
+      const todoDate = new Date(todo.created_at).toDateString()
+      return todoDate === today
+    })
+  }
+
   const getTodayCompletedCount = () => {
     const today = new Date().toDateString()
     return todos.filter(todo => {
@@ -167,7 +175,7 @@ export default function TodoApp() {
 
             {/* 오늘 할일 리스트 */}
             <TodoList
-              todos={todos}
+              todos={getTodayTodos()}
               onToggle={toggleTodo}
               onDelete={deleteTodo}
               todayCompletedCount={getTodayCompletedCount()}
